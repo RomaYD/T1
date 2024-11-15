@@ -1,0 +1,268 @@
+openapi: 3.0.3
+info:
+  title: Swagger Sprint - OpenAPI 3.0
+  description: |-
+    This is a Sprints Server 
+  version: 1.0.11
+servers:
+  - url: https://sprints.swagger.io/api/v3
+paths:
+    /sprints/upload:
+        post:
+            description: Upload csv files about Sprint
+            requestBody:
+                required: true
+                content:
+                  multipart/form-data:
+                    schema:
+                        type: object
+                        properties:
+                          files:
+                            type: array
+                            items:
+                                type: string
+                                format: binary
+            responses:
+                200:
+                    description: Файл успешно загружен
+                400:
+                    description: Неверный запрос
+
+    /sprints/list:
+        post:
+            description: Get list with sprints
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SprintsListFilter"
+            responses:
+                200:
+                    description: Файл успешно загружен
+
+    /sprints/metric:
+        post:
+            description: Рассчитывает метрики по переданным спринтам
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/SprintsListFilter"
+            responses:
+                200:
+                    description: Метрики посчитаны
+                404:
+                    description: Не найдены спринты
+
+components:
+    schemas:
+        SprintsListFilter:
+            type: object
+            additionalProperties: false
+            required:
+              - ids
+              - dates
+            properties:
+                ids:
+                    type: array
+                    items:
+                        type: string
+                dates:
+                    $ref: "#/components/schemas/TimeInterval"
+
+        SprintsListResponse:
+            type: object
+            additionalProperties: false
+            properties:
+                sprints:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/SprintWithoutTask"
+            required:
+              - sprints
+
+        SprintWithoutTask:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - name
+              - status
+              - dates
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                status:
+                    type: string
+                    enum:
+                      - closed
+                      - current
+                dates:
+                    $ref: "#/components/schemas/TimeInterval"
+
+        Sprint:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - name
+              - status
+              - dates
+              - tickets
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                status:
+                    type: string
+                    enum:
+                      - closed
+                      - current
+                dates:
+                    $ref: "#/components/schemas/TimeInterval"
+                tickets:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/Tiket"
+
+        TimeInterval:
+            type: object
+            additionalProperties: false
+            properties:
+                from:
+                    type: string
+                    format: date-time
+                to:
+                    type: string
+                    format: date-time
+        
+        Tiket:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - name
+              - area
+              - type
+              - status
+              - state
+              - priority
+              - number
+              - create_date
+              - created_by
+              - update_date
+              - history_actions
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                area:
+                    type: string
+                state:
+                    type: string
+                    enum:
+                      - Normal
+                priority:
+                    type: string
+                    enum:
+                      - High
+                      - Low
+                      - Middle
+                      - Crit
+                number:
+                    type: string
+                estimation:
+                    type: integer
+                    description: Estimate time in seconds
+                spent:
+                    type: integer
+                    description: Spent time in seconds
+                type:
+                    type: string
+                    enum:
+                      - Defect
+                      - Task
+                      - History
+                      - SubTask
+                status:
+                    type: string
+                    enum:
+                      - Closed
+                      - Testing
+                      - Analyse
+                      - Created
+                      - OnHold
+                      - Locality
+                      - DeclineByOwner
+                      - Done
+                      - InProgress
+                      - Approving
+                      - STFinished
+                      - ST
+                      - Fixing
+                      - Development
+                      - Waiting
+                      - ReadyToDevelop
+                resolution:
+                    type: string
+                    enum:
+                      - Done
+                      - Decline
+                      - DeclineByOwner
+                workgroup:
+                    type: string
+                parent_ticket_id:
+                    type: string
+                create_date:
+                    type: string
+                    format: date-time
+                created_by:
+                    type: string
+                update_date:
+                    type: string
+                    format: date-time
+                updated_by:
+                    type: string
+                assigne:
+                    type: string
+                owner:
+                    type: string
+                due_date:
+                    type: string
+                    format: date
+                history_actions:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/History"
+
+        History:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - property_name
+              - date
+              - version
+              - change
+            properties:
+                id:
+                    type: string
+                property_name:
+                    type: string
+                date:
+                    type: string
+                version:
+                    type: integer
+                change_type:
+                    type: string
+                    enum:
+                      - CREATED
+                      - FIELD_CHANGED
+                change:
+                    type: string
