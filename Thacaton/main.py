@@ -26,6 +26,7 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+
 @app.post('/sprints/list', response_model=None)
 def post_sprints_list(body: SprintsListFilter) -> None:
     pass
@@ -35,14 +36,28 @@ def post_sprints_list(body: SprintsListFilter) -> None:
 def post_sprints_metric(body: SprintsListFilter) -> None:
     pass
 
+
 all_elements = {}
 sprints_elements = {}
 debag = []
 
-def generate_string(length: int = random.randint(1, 50)) -> str:
-  characters = string.ascii_letters + string.digits + '-'
-  return ''.join(random.choice(characters) for i in range(length))
 
+def generate_string(length: int = random.randint(1, 50)) -> str:
+    characters = string.ascii_letters + string.digits + '-'
+    return ''.join(random.choice(characters) for i in range(length))
+
+
+# короче чё тут происходит
+# у нас есть две мапы в sprints_elements лежат спринты с генерируемыми айдишниками как ключами, как значение у них маппа
+# в ней след ключи sprint_name, sprint_status, sprint_start_date, sprint_end_date, entity_ids по последнему список тасок (их айди)
+# по этим айди идём в мапу all_elements там структура следующая
+# '5179881': {'area': 'Управление релизами изменениями', 'type': 'Задача', 'status': 'Закрыто', 'state': 'Normal',
+# 'priority': 'Средний', 'ticket_number': 'PPRC-2516', 'name': '[PPPL] [FE] - Сделать автозаполнение формы данными из парсинга json',
+# 'create_date': '2024-09-24 12:22:30.450001', 'created_by': 'Е. Б.', 'update_date': '2024-10-23 07:00:42.070146',
+# 'updated_by': 'Е. Ш.', 'parent_ticket_id': '4933112', 'assignee': 'Е. Ш.', 'owner': 'Е. Б.', 'due_date': '',
+# 'rank': '0|qm0rdc:', 'estimation': '57600', 'spent': '', 'workgroup': 'Новая функциональность', 'resolution': 'Готово',
+# 'history': {'history_property_name': 'Статус', 'history_date': '10/23/24 7:00', 'history_version': '12',
+# 'history_change_type': 'FIELD_CHANGED', 'history_change': 'inProgress -> closed', 'Столбец1': '', '': ''}}}
 @app.post('/sprints/upload', response_model=None)
 def post_sprints_upload(file: list[UploadFile]) -> None:
     print("lpl")
@@ -55,17 +70,20 @@ def post_sprints_upload(file: list[UploadFile]) -> None:
         except Exception as e:
             print({"filename": curr_file.filename, "error": str(e)})  # Обработка ошибок декодирования
 
-# ПЕРЕПИШИ ПОТОМ НА ВЫРАЖЕНИЯ НО ПОКА И ТАК СОЙДЁТ
+    # ПЕРЕПИШИ ПОТОМ НА ВЫРАЖЕНИЯ НО ПОКА И ТАК СОЙДЁТ
     if "data_for_spb_hakaton_entities1-Table-1.csv" in files_decoded.keys():
-        files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1] = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1][0].split(';')
+        files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1] = \
+            files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1][0].split(';')
         for ind in range(2, len(files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"])):
             curr_elem_info = {}
-            files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind] = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][0].split(';')
+            files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind] = \
+                files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][0].split(';')
             for elem_info_ind in range(len(files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind])):
                 if elem_info_ind == 0:
                     curr_id = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][0]
                 else:
-                    curr_elem_info[files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1][elem_info_ind]] = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][elem_info_ind]
+                    curr_elem_info[files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1][elem_info_ind]] = \
+                        files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][elem_info_ind]
             all_elements[curr_id] = curr_elem_info
     print(11)
     if "sprints-Table-1.csv" in files_decoded.keys():
@@ -75,9 +93,11 @@ def post_sprints_upload(file: list[UploadFile]) -> None:
             files_decoded["sprints-Table-1.csv"][ind] = ', '.join(files_decoded["sprints-Table-1.csv"][ind]).split(';')
             for elem_info_ind in range(len(files_decoded["sprints-Table-1.csv"][ind])):
                 if files_decoded["sprints-Table-1.csv"][1][elem_info_ind] != "entity_ids":
-                    curr_sprint[files_decoded["sprints-Table-1.csv"][1][elem_info_ind]] = files_decoded["sprints-Table-1.csv"][ind][elem_info_ind]
+                    curr_sprint[files_decoded["sprints-Table-1.csv"][1][elem_info_ind]] = \
+                        files_decoded["sprints-Table-1.csv"][ind][elem_info_ind]
                 else:
-                    curr_sprint[files_decoded["sprints-Table-1.csv"][1][elem_info_ind]] = set(files_decoded["sprints-Table-1.csv"][ind][elem_info_ind][1:-1].split(', '))
+                    curr_sprint[files_decoded["sprints-Table-1.csv"][1][elem_info_ind]] = set(
+                        files_decoded["sprints-Table-1.csv"][ind][elem_info_ind][1:-1].split(', '))
             sprint_id = generate_string(50)
             if sprint_id in sprints_elements.keys():
                 while sprint_id in sprints_elements.keys():
@@ -91,7 +111,8 @@ def post_sprints_upload(file: list[UploadFile]) -> None:
             for elem_info_ind in range(len(files_decoded["history-Table-1.csv"][ind])):
                 if elem_info_ind != 0:
                     if elem_info_ind < 8:
-                        curr_history[files_decoded["history-Table-1.csv"][1][elem_info_ind]] = files_decoded["history-Table-1.csv"][ind][:8][elem_info_ind]
+                        curr_history[files_decoded["history-Table-1.csv"][1][elem_info_ind]] = \
+                            files_decoded["history-Table-1.csv"][ind][:8][elem_info_ind]
                 else:
                     elem_id = files_decoded["history-Table-1.csv"][ind][elem_info_ind]
             if elem_id not in all_elements:
@@ -101,8 +122,7 @@ def post_sprints_upload(file: list[UploadFile]) -> None:
     # print(debag)
     print(all_elements)
 
-
-        # print(all_elements)
+    # print(all_elements)
     # print(files_decoded)
 
 
