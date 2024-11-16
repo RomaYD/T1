@@ -23,15 +23,18 @@ document.getElementById('uploadButton').addEventListener('click', function() {
     }
     
     fileList.appendChild(ul);
+    const formData = new FormData();
+
+    // Добавляем все выбранные файлы в FormData
+    for (let i = 0; i < files.length; i++) {
+        formData.append('file', files[i], files[i].name); // Используйте 'files' как имя поля
+    }
 
     const url = 'http://localhost:8000/sprints/upload';
     
     fetch(url, {
         method: 'POST', // Метод запроса
-        headers: {
-            'Content-Type': 'multipart/form-data' // Указываем тип данных
-        },
-        body: files
+        body: formData
     })
     .then(response => {
         if (!response.ok) {
