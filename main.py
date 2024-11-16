@@ -1,3 +1,4 @@
+
 data = load_file()
 for sprint in data:
     dates_of_sprint = sprint.dates
@@ -50,4 +51,4 @@ for sprint in data:
         throwed = False
 
 
-
+# curl -X POST -F "file=@sprints-Table-1.csv" -F "file=@history-Table-1.csv" -H "Content-Type: multipart/form-data" http://localhost:8000/sprints/upload

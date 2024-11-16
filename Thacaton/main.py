@@ -3,9 +3,11 @@
 #   timestamp: 2024-11-16T00:19:36+00:00
 
 from __future__ import annotations
-
 from fastapi import FastAPI, UploadFile
 import csv
+import random
+import string
+from fastapi.middleware.cors import CORSMiddleware
 from models import SprintsListFilter
 
 app = FastAPI(
@@ -15,6 +17,14 @@ app = FastAPI(
     servers=[{'url': 'https://sprints.swagger.io/api/v3'}],
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 @app.post('/sprints/list', response_model=None)
 def post_sprints_list(body: SprintsListFilter) -> None:
@@ -28,6 +38,10 @@ def post_sprints_metric(body: SprintsListFilter) -> None:
 all_elements = {}
 sprints_elements = {}
 
+def generate_string(length: int = random.randint(1, 50)) -> str:
+  characters = string.ascii_letters + string.digits + '-'
+  return ''.join(random.choice(characters) for i in range(length))
+
 @app.post('/sprints/upload', response_model=None)
 def post_sprints_upload(file: list[UploadFile]) -> None:
     print("lpl")
@@ -40,29 +54,37 @@ def post_sprints_upload(file: list[UploadFile]) -> None:
         except Exception as e:
             print({"filename": curr_file.filename, "error": str(e)})  # Обработка ошибок декодирования
 
-        for _ in range(len(files_decoded)):
-            if curr_file.filename == "data_for_spb_hakaton_entities1-Table-1.csv":
-                files_decoded[_][1] = files_decoded[_][1][0].split(';')
-                for ind in range(2, len(files_decoded[_])):
-                    curr_elem_info = {}
-                    files_decoded[_][ind] = files_decoded[_][ind][0].split(';')
-                    for elem_info_ind in range(len(files_decoded[_][ind])):
-                        if elem_info_ind == 0:
-                            curr_id = files_decoded[_][ind][0]
-                        else:
-                            curr_elem_info[files_decoded[_][1][elem_info_ind]] = files_decoded[_][ind][elem_info_ind]
-                    all_elements[curr_id] = curr_elem_info
-            elif curr_file.filename == "sprints-Table-1.csv":
-                print(files_decoded[_])
-                files_decoded[_][1] = files_decoded[_][1][0].split(';')
-                for ind in range(2, len(files_decoded[_])):
-                    curr_sprint = {}
-                    files_decoded[_][ind] = files_decoded[_][ind][0].split(';')
-                    for elem_info_ind in range(len(files_decoded[_][ind])):
+    for _ in range(len(files_decoded)):
+        if curr_file.filename == "data_for_spb_hakaton_entities1-Table-1.csv":
+            files_decoded[_][1] = files_decoded[_][1][0].split(';')
+            for ind in range(2, len(files_decoded[_])):
+                curr_elem_info = {}
+                files_decoded[_][ind] = files_decoded[_][ind][0].split(';')
+                for elem_info_ind in range(len(files_decoded[_][ind])):
+                    if elem_info_ind == 0:
+                        curr_id = files_decoded[_][ind][0]
+                    else:
+                        curr_elem_info[files_decoded[_][1][elem_info_ind]] = files_decoded[_][ind][elem_info_ind]
+                all_elements[curr_id] = curr_elem_info
+        elif curr_file.filename == "sprints-Table-1.csv":
+            files_decoded[_][1] = files_decoded[_][1][0].split(';')
+            for ind in range(2, len(files_decoded[_])):
+                curr_sprint = {}
+                files_decoded[_][ind] = ', '.join(files_decoded[_][ind]).split(';')
+                for elem_info_ind in range(len(files_decoded[_][ind])):
+                    if files_decoded[_][1][elem_info_ind] != "entity_ids":
                         curr_sprint[files_decoded[_][1][elem_info_ind]] = files_decoded[_][ind][elem_info_ind]
-                    sprints_elements[]
+                    else:
+                        curr_sprint[files_decoded[_][1][elem_info_ind]] = set(files_decoded[_][ind][elem_info_ind][1:-1].split(', '))
+                sprint_id = generate_string(50)
+                if sprint_id in sprints_elements.keys():
+                    while sprint_id in sprints_elements.keys():
+                        sprint_id = generate_string(50)
+                sprints_elements[sprint_id] = curr_sprint
+        else:
+            pass
 
-        print(all_elements)
+        print(sprints_elements)
     # print(files_decoded)
 
 
