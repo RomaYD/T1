@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 from models import SprintsListFilter
 
@@ -15,6 +16,14 @@ app = FastAPI(
     servers=[{'url': 'https://sprints.swagger.io/api/v3'}],
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+)
 
 @app.post('/sprints/list', response_model=None)
 def post_sprints_list(body: SprintsListFilter) -> None:
