@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, UploadFile
-
+import csv
 from models import SprintsListFilter
 
 app = FastAPI(
@@ -25,6 +25,8 @@ def post_sprints_list(body: SprintsListFilter) -> None:
 def post_sprints_metric(body: SprintsListFilter) -> None:
     pass
 
+all_elements = {}
+sprints_elements = {}
 
 @app.post('/sprints/upload', response_model=None)
 def post_sprints_upload(file: list[UploadFile]) -> None:
@@ -33,12 +35,35 @@ def post_sprints_upload(file: list[UploadFile]) -> None:
     for curr_file in file:
         file_content = curr_file.file.read()  # Читаем закодированные данные
         try:
-            file_content_nonbytes = file_content.decode('utf-8')  # Декодируем Base64
-            files_decoded.append(file_content_nonbytes)
+            file_content_nonbytes = csv.reader(file_content.decode('utf-8').splitlines())  # Декодируем Base64
+            files_decoded.append(list(file_content_nonbytes))
         except Exception as e:
             print({"filename": curr_file.filename, "error": str(e)})  # Обработка ошибок декодирования
 
-    print(files_decoded)
+        for _ in range(len(files_decoded)):
+            if curr_file.filename == "data_for_spb_hakaton_entities1-Table-1.csv":
+                files_decoded[_][1] = files_decoded[_][1][0].split(';')
+                for ind in range(2, len(files_decoded[_])):
+                    curr_elem_info = {}
+                    files_decoded[_][ind] = files_decoded[_][ind][0].split(';')
+                    for elem_info_ind in range(len(files_decoded[_][ind])):
+                        if elem_info_ind == 0:
+                            curr_id = files_decoded[_][ind][0]
+                        else:
+                            curr_elem_info[files_decoded[_][1][elem_info_ind]] = files_decoded[_][ind][elem_info_ind]
+                    all_elements[curr_id] = curr_elem_info
+            elif curr_file.filename == "sprints-Table-1.csv":
+                print(files_decoded[_])
+                files_decoded[_][1] = files_decoded[_][1][0].split(';')
+                for ind in range(2, len(files_decoded[_])):
+                    curr_sprint = {}
+                    files_decoded[_][ind] = files_decoded[_][ind][0].split(';')
+                    for elem_info_ind in range(len(files_decoded[_][ind])):
+                        curr_sprint[files_decoded[_][1][elem_info_ind]] = files_decoded[_][ind][elem_info_ind]
+                    sprints_elements[]
+
+        print(all_elements)
+    # print(files_decoded)
 
 
 if __name__ == "__main__":
