@@ -37,6 +37,7 @@ def post_sprints_metric(body: SprintsListFilter) -> None:
 
 all_elements = {}
 sprints_elements = {}
+debag = []
 
 def generate_string(length: int = random.randint(1, 50)) -> str:
   characters = string.ascii_letters + string.digits + '-'
@@ -45,46 +46,63 @@ def generate_string(length: int = random.randint(1, 50)) -> str:
 @app.post('/sprints/upload', response_model=None)
 def post_sprints_upload(file: list[UploadFile]) -> None:
     print("lpl")
-    files_decoded = []
+    files_decoded = {}
     for curr_file in file:
         file_content = curr_file.file.read()  # Читаем закодированные данные
         try:
             file_content_nonbytes = csv.reader(file_content.decode('utf-8').splitlines())  # Декодируем Base64
-            files_decoded.append(list(file_content_nonbytes))
+            files_decoded[curr_file.filename] = list(file_content_nonbytes)
         except Exception as e:
             print({"filename": curr_file.filename, "error": str(e)})  # Обработка ошибок декодирования
 
-    for _ in range(len(files_decoded)):
-        if curr_file.filename == "data_for_spb_hakaton_entities1-Table-1.csv":
-            files_decoded[_][1] = files_decoded[_][1][0].split(';')
-            for ind in range(2, len(files_decoded[_])):
-                curr_elem_info = {}
-                files_decoded[_][ind] = files_decoded[_][ind][0].split(';')
-                for elem_info_ind in range(len(files_decoded[_][ind])):
-                    if elem_info_ind == 0:
-                        curr_id = files_decoded[_][ind][0]
-                    else:
-                        curr_elem_info[files_decoded[_][1][elem_info_ind]] = files_decoded[_][ind][elem_info_ind]
-                all_elements[curr_id] = curr_elem_info
-        elif curr_file.filename == "sprints-Table-1.csv":
-            files_decoded[_][1] = files_decoded[_][1][0].split(';')
-            for ind in range(2, len(files_decoded[_])):
-                curr_sprint = {}
-                files_decoded[_][ind] = ', '.join(files_decoded[_][ind]).split(';')
-                for elem_info_ind in range(len(files_decoded[_][ind])):
-                    if files_decoded[_][1][elem_info_ind] != "entity_ids":
-                        curr_sprint[files_decoded[_][1][elem_info_ind]] = files_decoded[_][ind][elem_info_ind]
-                    else:
-                        curr_sprint[files_decoded[_][1][elem_info_ind]] = set(files_decoded[_][ind][elem_info_ind][1:-1].split(', '))
-                sprint_id = generate_string(50)
-                if sprint_id in sprints_elements.keys():
-                    while sprint_id in sprints_elements.keys():
-                        sprint_id = generate_string(50)
-                sprints_elements[sprint_id] = curr_sprint
-        else:
-            pass
+# ПЕРЕПИШИ ПОТОМ НА ВЫРАЖЕНИЯ НО ПОКА И ТАК СОЙДЁТ
+    if "data_for_spb_hakaton_entities1-Table-1.csv" in files_decoded.keys():
+        files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1] = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1][0].split(';')
+        for ind in range(2, len(files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"])):
+            curr_elem_info = {}
+            files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind] = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][0].split(';')
+            for elem_info_ind in range(len(files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind])):
+                if elem_info_ind == 0:
+                    curr_id = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][0]
+                else:
+                    curr_elem_info[files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][1][elem_info_ind]] = files_decoded["data_for_spb_hakaton_entities1-Table-1.csv"][ind][elem_info_ind]
+            all_elements[curr_id] = curr_elem_info
+    print(11)
+    if "sprints-Table-1.csv" in files_decoded.keys():
+        files_decoded["sprints-Table-1.csv"][1] = files_decoded["sprints-Table-1.csv"][1][0].split(';')
+        for ind in range(2, len(files_decoded["sprints-Table-1.csv"])):
+            curr_sprint = {}
+            files_decoded["sprints-Table-1.csv"][ind] = ', '.join(files_decoded["sprints-Table-1.csv"][ind]).split(';')
+            for elem_info_ind in range(len(files_decoded["sprints-Table-1.csv"][ind])):
+                if files_decoded["sprints-Table-1.csv"][1][elem_info_ind] != "entity_ids":
+                    curr_sprint[files_decoded["sprints-Table-1.csv"][1][elem_info_ind]] = files_decoded["sprints-Table-1.csv"][ind][elem_info_ind]
+                else:
+                    curr_sprint[files_decoded["sprints-Table-1.csv"][1][elem_info_ind]] = set(files_decoded["sprints-Table-1.csv"][ind][elem_info_ind][1:-1].split(', '))
+            sprint_id = generate_string(50)
+            if sprint_id in sprints_elements.keys():
+                while sprint_id in sprints_elements.keys():
+                    sprint_id = generate_string(50)
+            sprints_elements[sprint_id] = curr_sprint
+    if "data_for_spb_hakaton_entities1-Table-1.csv" in files_decoded.keys() and "history-Table-1.csv" in files_decoded.keys():
+        files_decoded["history-Table-1.csv"][1] = files_decoded["history-Table-1.csv"][1][0].split(';')
+        for ind in range(2, len(files_decoded["history-Table-1.csv"])):
+            curr_history = {}
+            files_decoded["history-Table-1.csv"][ind] = files_decoded["history-Table-1.csv"][ind][0].split(';')
+            for elem_info_ind in range(len(files_decoded["history-Table-1.csv"][ind])):
+                if elem_info_ind != 0:
+                    if elem_info_ind < 8:
+                        curr_history[files_decoded["history-Table-1.csv"][1][elem_info_ind]] = files_decoded["history-Table-1.csv"][ind][:8][elem_info_ind]
+                else:
+                    elem_id = files_decoded["history-Table-1.csv"][ind][elem_info_ind]
+            if elem_id not in all_elements:
+                debag.append(elem_id)
+            else:
+                all_elements[elem_id]["history"] = curr_history
+    # print(debag)
+    print(all_elements)
 
-        print(sprints_elements)
+
+        # print(all_elements)
     # print(files_decoded)
 
 
